@@ -37,7 +37,7 @@ class Level:
         self.visible_sprites.custom_draw(display_surface, camera_offset)
 
     def create_weapon(self, weapon_index):
-        direction_name = self.player.movement_component.get_direction_name()
+        direction_name = self.player.direction_name
         rect = self.player.animation_component.rect
         self.current_weapon = Weapon([self.visible_sprites, self.attack_sprites],
                                      weapon_index, direction_name, rect)

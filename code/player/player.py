@@ -1,7 +1,8 @@
+import pygame
+
 from code.components.animation_component import AnimationComponent
 from code.components.attack_component import AttackComponent
 from code.components.magic_component import MagicComponent
-from code.components.movement_component import MovementComponent
 from code.player.player_state_controller import PlayerStateController
 from code.player.player_stats import Stats
 
@@ -17,47 +18,53 @@ class Player:
     def __init__(self, position, collide_inflate, obstacle_sprites,
                  create_weapon_function, destroy_weapon_function,
                  create_spell_function, destroy_spell_function):
-        self._stats = Stats(health=100, energy=60, attack=10, magic=4, speed=5)
+        self.stats = Stats(health=100, energy=60, attack=10, magic=4, speed=5)
+        self.obstacle_sprites = obstacle_sprites
         self._state_controller = PlayerStateController(self)
+        self.direction_name = "down"
         self.animation_component = AnimationComponent([], Player.CHARACTER_PATH, Player.ANIMATIONS,
                                                       collide_inflate, position)
-        self.movement_component = MovementComponent(obstacle_sprites, self.animation_component,
-                                                    self.animation_component.collision_box,
-                                                    self._stats.speed)
         self.attack_component = AttackComponent(create_weapon_function, destroy_weapon_function)
         self.magic_component = MagicComponent(create_spell_function, destroy_spell_function)
+        self.ask_to_attack = False
+        self.direction_wanted = pygame.Vector2(0, 0)
+        self.ask_to_send_spell = False
+
+    @property
+    def ask_to_move(self):
+        return self.direction_wanted != pygame.Vector2(0, 0)
 
     @property
     def health(self):
-        return self._stats.health
+        return self.stats.health
 
     @property
     def health_percent(self):
-        return self._stats.get_health_percent()
+        return self.stats.get_health_percent()
 
     @property
     def energy(self):
-        return self._stats.energy
+        return self.stats.energy
 
     @property
     def energy_percent(self):
-        return self._stats.get_energy_percent()
+        return self.stats.get_energy_percent()
 
     @property
     def attack(self):
-        return self._stats.attack
+        return self.stats.attack
 
     @property
     def magic(self):
-        return self._stats.magic
+        return self.stats.magic
 
     @property
     def speed(self):
-        return self._stats.speed
+        return self.stats.speed
 
     @property
     def experience(self):
-        return self._stats.experience
+        return self.stats.experience
 
     @property
     def position(self):
@@ -68,15 +75,11 @@ class Player:
         return self.animation_component
 
     def update(self):
+        self._state_controller.update()
         self.switch_animation()
         self.attack_component.update()
         self.magic_component.update()
-        self.movement_component.update()
-        # self.animation_component.position = self.movement_component.position
         self.animation_component.update()
-
-    def stop(self):
-        self.movement_component.stop()
 
     def create_attack(self):
         self.attack_component.attack()
@@ -86,13 +89,10 @@ class Player:
         return self.attack_component.is_attacking()
 
     def switch_animation(self):
-        animation_name = self.movement_component.get_direction_name() + self.get_status_name()
+        animation_name = f"{self.direction_name}"
+        if self.get_status_name() != "move":
+            animation_name += f"_{self.get_status_name()}"
         self.animation_component.switch_animation(animation_name)
 
     def get_status_name(self):
-        if self.attack_component.is_attacking():
-            return self.ATTACK
-        elif self.movement_component.is_moving():
-            return self.MOVE
-        else:
-            return self.IDLE
+        return self._state_controller.get_status_name()

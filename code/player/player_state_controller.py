@@ -29,22 +29,16 @@ class PlayerStateController:
         self._state = state(self._player)
 
     def _state_idle_exit(self):
-        if self._player.is_in_attack_radius():
-            self._change_state(PlayerStateCanAttack)
-        elif self._player.is_in_notice_radius():
+        if self._player.ask_to_move:
             self._change_state(PlayerStateMove)
+        if self._player.ask_to_attack:
+            self._change_state(PlayerStateAttack)
 
     def _state_move_exit(self):
-        if self._player.is_in_attack_radius():
-            self._change_state(PlayerStateCanAttack)
-        elif not self._player.is_in_notice_radius():
-            self._change_state(PlayerStateIdle)
-
-    def _state_can_attack_exit(self):
-        if not self._player.is_in_attack_radius():
-            self._change_state(PlayerStateMove)
-        elif not self._player.is_attacking():
+        if self._player.ask_to_attack:
             self._change_state(PlayerStateAttack)
+        if not self._player.ask_to_move:
+            self._change_state(PlayerStateIdle)
 
     def _state_attack_exit(self):
         if self._player.animation_component.is_ending:

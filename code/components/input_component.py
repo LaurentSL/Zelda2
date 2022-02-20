@@ -27,23 +27,13 @@ class InputComponent:
     def direction(self):
         x = self.keys[pygame.K_RIGHT] - self.keys[pygame.K_LEFT]
         y = self.keys[pygame.K_DOWN] - self.keys[pygame.K_UP]
-        if x == y == 0:
-            self.player.stop()
-        else:
-            if not self.player.is_attacking:
-                self.player.movement_component.can_move()
-            self.player.movement_component.set_normalized_direction(x, y)
+        self.player.direction_wanted = pygame.Vector2(x, y)
 
     def attack(self):
-        if self.keys[pygame.K_SPACE]:
-            direction = self.player.movement_component.direction
-            self.player.stop()
-            self.player.create_attack()
+        self.player.ask_to_attack = self.keys[pygame.K_SPACE]
 
     def magic(self):
-        if self.keys[pygame.K_LCTRL] and not self.player.attack_component.is_attacking():
-            self.player.stop()
-            self.player.magic_component.create_attack()
+        self.player.ask_to_send_spell = self.keys[pygame.K_LCTRL]
 
     def switch_weapon(self):
         if self.keys[pygame.K_a]:
